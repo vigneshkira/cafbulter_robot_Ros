@@ -18,7 +18,7 @@ class ButlerNode(Node):
         )
         self.get_logger().info('Butler Node initialized and listening for orders.')
 
-        # Subscribe to kitchen's food ready messages
+        
         self.food_ready_sub = self.create_subscription(
             String,
             'kitchen/ready',
@@ -37,11 +37,10 @@ class ButlerNode(Node):
         self.get_logger().info(f"Order confirmed: {confirmation_msg.data}")
 
     def handle_food_ready(self, msg):
-        # Handle the food ready notification from the kitchen
         food_ready_msg = msg.data
         self.get_logger().info(f"Received food ready message: {food_ready_msg}")
         
-        # Acknowledge food delivery to the kitchen
+       
         ack_msg = String()
         ack_msg.data = f"{food_ready_msg} - Delivered"
         self.confirm_pub.publish(ack_msg)
