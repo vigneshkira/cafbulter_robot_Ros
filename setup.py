@@ -11,8 +11,7 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
-        ('share/'+package_name + '/launch', ['launch_file/bulter.launch.py']),
-        ('share/'+package_name + '/launch', ['launch_file/spawn.launch.py']),
+                (os.path.join('share', package_name, 'launch'), glob('launch_file/bulter.launch.py')),
 
         
     ],
@@ -28,7 +27,7 @@ setup(
             'test_node = cafe_root.cafe_publisher:main',
             'test_sub = cafe_root.cafe_subscrier:main',
             'test_chef = cafe_root.kitchen_node:main',
-            'robot_state_publisher = cafe_root.cafe:main',
+            
         ],
     },
 )

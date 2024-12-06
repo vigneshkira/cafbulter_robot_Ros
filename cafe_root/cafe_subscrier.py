@@ -2,29 +2,41 @@ import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
 
-class CafeRobotNode(Node):
+class ButlerNode(Node):
     def __init__(self):
-        super().__init__('cafe_robot_node')
-        self.order_sub = self.create_subscription(String, 'customer/orders', self.handle_order, 10)
-        self.kitchen_pub = self.create_publisher(String, 'kitchen/orders', 10)
-        self.kitchen_sub = self.create_subscription(String, 'kitchen/ready', self.handle_food_ready, 10)
-        # self.kitchen_pub_table = self.create_publisher(String, 'Kitchen/food',10)
+        super().__init__('butler_node')
+        self.subscription = self.create_subscription(
+            String,
+            'customer/order',  # Subscribe to the topic where the customer sends orders
+            self.process_order,
+            10)
+        self.publisher_ = self.create_publisher(String, 'confirmation_topic', 10)  # Publish confirmations
+        self.get_logger().info('Butler Node started and listening for orders.')
 
-    def handle_order(self, msg):
-        self.get_logger().info(f"Received order: {msg.data}")
-        self.kitchen_pub.publish(msg)  # Forward order to kitchen
-        self.get_logger().info("Order sent to kitchen")
+    def process_order(self, msg):
+        order = msg.data
+        self.get_logger().info(f"Received order: {order}")
 
-    def handle_food_ready(self, msg):
-        self.get_logger().info(f"Food ready: {msg.data}")
-        # Simulate delivering the food
-        self.get_logger().info("Delivering food to the customer...")
+        # Simulate confirmation logic
+        if "Canceled" in order:
+            self.get_logger().info(f"Order is canceled: {order}")
+        else:
+            self.confirm_order(order)
 
-def main(args=None):
-    rclpy.init(args=args)
-    node = CafeRobotNode()
+    def confirm_order(self, order):
+        # Simulate sending a confirmation
+        confirmation_msg = String()
+        confirmation_msg.data = f"{order} - Confirmed"
+        self.publisher_.publish(confirmation_msg)
+        self.get_logger().info(f"Order confirmed: {confirmation_msg.data}")
+
+def main():
+    rclpy.init()
+    node = ButlerNode()
     rclpy.spin(node)
+    node.destroy_node()
     rclpy.shutdown()
+
 
 if __name__ == '__main__':
     main()
