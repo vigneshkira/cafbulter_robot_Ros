@@ -13,10 +13,7 @@ class CustomerNode(Node):
         self.input_thread.start()
 
     def handle_user_input(self):
-        """
-        This method runs in a separate thread to handle user input without blocking ROS callbacks.
-        Allows the user to place orders for specific tables.
-        """
+        
         while not self.stop_thread:
             try:
                 print("\nPlease select a table (1-4) for your order.")
@@ -29,12 +26,10 @@ class CustomerNode(Node):
                 elif table_number in ['1', '2', '3', '4']:  # Check if valid table number
                     order_text = input(f"Enter order for Table {table_number} (e.g., 'Coffee', 'Tea', etc.): ").strip()
                     if order_text:
-                        # Create the order message
                         order_msg = f"Order for Table {table_number}: {order_text}"
                         msg = String()
                         msg.data = order_msg
 
-                        # Publish the order
                         self.publisher_node.publish(msg)
                         self.get_logger().info(f"Custom order sent: {msg.data}")
                     else:
@@ -46,24 +41,20 @@ class CustomerNode(Node):
                 self.stop_thread = True
 
     def destroy_node(self):
-        """
-        Overridden to stop the input thread properly and ensure a clean shutdown of the node.
-        """
+       
         self.stop_thread = True
         if self.input_thread.is_alive():
-            self.input_thread.join()  # Wait for the input thread to finish
+            self.input_thread.join()  
         super().destroy_node()
 
 
 def main(args=None):
-    """
-    Initializes ROS 2, spins the node for callbacks, and handles graceful shutdown.
-    """
+    
     rclpy.init(args=args)
     node = CustomerNode()
 
     try:
-        rclpy.spin(node)  # Keep the node alive and process callbacks
+        rclpy.spin(node) 
     except KeyboardInterrupt:
         node.get_logger().info("KeyboardInterrupt detected. Shutting down...")
     finally:
