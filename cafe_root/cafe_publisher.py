@@ -1,98 +1,74 @@
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
-import random
-import time
+import threading
 
-class Customernode(Node):
+class CustomerNode(Node):
     def __init__(self):
         super().__init__('test_node')
         self.publisher_node = self.create_publisher(String, 'customer/order', 10)
-        self.confirmation_timer = None  # Timer for order confirmation
-        self.confirmed = False  # Flag for order confirmation status
-        self.order_id = None  # Store the current order ID
-        self.timer = self.create_timer(5.0, self.place_order)  # Place orders every 5 seconds
 
-    def place_order(self):
-        """
-        This method generates a random order and sends it to the kitchen.
-        Starts a timer for order confirmation.
-        """
-        self.order_id = random.randint(1, 100)
-        order_details = f"Order ID: {self.order_id}, Coffee for Table {random.randint(1, 5)}"
-        
-        msg = String()
-        msg.data = order_details
+        self.stop_thread = False  # Flag to control the stopping of the thread
+        self.input_thread = threading.Thread(target=self.handle_user_input)
+        self.input_thread.start()
 
-        # Publish the order and log the details
-        self.publisher_node.publish(msg)
-        self.get_logger().info(f"Order sent: {msg.data}")
+    def handle_user_input(self):
+        """
+        This method runs in a separate thread to handle user input without blocking ROS callbacks.
+        Allows the user to place orders for specific tables.
+        """
+        while not self.stop_thread:
+            try:
+                print("\nPlease select a table (1-4) for your order.")
+                table_number = input("Enter table number (1-4) or 'exit' to quit: ").strip().lower()
 
-        # Start a 10-second timer for order confirmation
-        if self.confirmation_timer is None:
-            self.confirmation_timer = self.create_timer(10.0, self.handle_timeout)
+                if table_number == 'exit':
+                    self.get_logger().info("Exiting Customer Node.")
+                    self.stop_thread = True  # Signal to stop the thread
+                    break
+                elif table_number in ['1', '2', '3', '4']:  # Check if valid table number
+                    order_text = input(f"Enter order for Table {table_number} (e.g., 'Coffee', 'Tea', etc.): ").strip()
+                    if order_text:
+                        # Create the order message
+                        order_msg = f"Order for Table {table_number}: {order_text}"
+                        msg = String()
+                        msg.data = order_msg
 
-    def handle_timeout(self):
-        """
-        If the order is not confirmed within 10 seconds, it is considered canceled.
-        """
-        if not self.confirmed:
-            self.get_logger().info(f"Order {self.order_id} canceled due to timeout.")
-            cancel_msg = String()
-            cancel_msg.data = f"Order ID: {self.order_id} - Canceled due to timeout."
-            self.publisher_node.publish(cancel_msg)
-        
-        # Stop the confirmation timer after handling the timeout
-        self.cancel_confirmation_timer()
+                        # Publish the order
+                        self.publisher_node.publish(msg)
+                        self.get_logger().info(f"Custom order sent: {msg.data}")
+                    else:
+                        self.get_logger().info("Order cannot be empty. Please try again.")
+                else:
+                    self.get_logger().info("Invalid table number. Please select a table between 1 and 4.")
+            except Exception as e:
+                self.get_logger().error(f"Error in input thread: {e}")
+                self.stop_thread = True
 
-    def confirm_order(self):
+    def destroy_node(self):
         """
-        This method simulates the confirmation of the order.
+        Overridden to stop the input thread properly and ensure a clean shutdown of the node.
         """
-        if self.order_id is not None:
-            self.get_logger().info(f"Order {self.order_id} confirmed!")
-            self.confirmed = True
-            self.cancel_confirmation_timer()
-
-    def cancel_confirmation_timer(self):
-        """
-        Cancel the order confirmation timer if it's still running.
-        """
-        if self.confirmation_timer is not None:
-            self.confirmation_timer.cancel()
-            self.confirmation_timer = None
+        self.stop_thread = True
+        if self.input_thread.is_alive():
+            self.input_thread.join()  # Wait for the input thread to finish
+        super().destroy_node()
 
 
 def main(args=None):
+    """
+    Initializes ROS 2, spins the node for callbacks, and handles graceful shutdown.
+    """
     rclpy.init(args=args)
-
-    # Initialize the Customer Node
-    node = Customernode()
+    node = CustomerNode()
 
     try:
-        while rclpy.ok():
-            # Get user input for the order or confirmation
-            order_text = input("Enter your order (e.g., 'Coffee for Table 1') or type 'confirm' to confirm the order or 'exit' to quit: ")
-
-            if order_text.lower() == 'exit':
-                break
-            elif order_text.lower() == 'confirm':
-                # Simulate confirmation from the customer side
-                node.confirm_order()
-            else:
-                # Manually send a user-defined order to the system
-                msg = String()
-                msg.data = order_text
-                node.publisher_node.publish(msg)
-                node.get_logger().info(f"Custom order sent: {msg.data}")
-                
-            time.sleep(1)  # Small delay for user input handling
-
+        rclpy.spin(node)  # Keep the node alive and process callbacks
     except KeyboardInterrupt:
-        pass
+        node.get_logger().info("KeyboardInterrupt detected. Shutting down...")
     finally:
         node.destroy_node()
-        rclpy.shutdown()
+        rclpy.shutdown()  # Shutdown ROS 2 when done
 
 
 if __name__ == '__main__':
