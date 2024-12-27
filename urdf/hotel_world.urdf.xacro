@@ -1,0 +1,71 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="hotel_world">
+
+  <!-- Floor -->
+  <link name="floor">
+    <visual>
+      <geometry>
+        <box size="10 10 0.1"/>
+      </geometry>
+      <material name="grey">
+        <color rgba="0.5 0.5 0.5 1"/>
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="10 10 0.1"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="1"/>
+      <origin xyz="0 0 0"/>
+      <inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1"/>
+    </inertial>
+  </link>
+
+  <!-- Walls -->
+  <link name="wall1">
+    <visual>
+      <geometry>
+        <box size="0.2 10 2.5"/>
+      </geometry>
+      <material name="white">
+        <color rgba="1 1 1 1"/>
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="0.2 10 2.5"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="wall1_joint" type="fixed">
+    <parent link="floor"/>
+    <child link="wall1"/>
+    <origin xyz="-5 0 1.25"/>
+  </joint>
+
+  <link name="wall2">
+    <visual>
+      <geometry>
+        <box size="10 0.2 2.5"/>
+      </geometry>
+      <material name="white">
+        <color rgba="1 1 1 1"/>
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="10 0.2 2.5"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="wall2_joint" type="fixed">
+    <parent link="floor"/>
+    <child link="wall2"/>
+    <origin xyz="0 -5 1.25"/>
+  </joint>
+
+</robot>

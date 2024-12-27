@@ -1,25 +1,20 @@
-import os
 from launch import LaunchDescription
 from launch.actions import ExecuteProcess
 from launch_ros.actions import Node
 
 def generate_launch_description():
-   urdf_file_path = 'urdf/turtlebot3_burger.urdf'
-
-   if not os.path.exists(urdf_file_path):
-        raise FileNotFoundError(f"URDF file not found: {urdf_file_path}")
-
-   return LaunchDescription([
-        # Start Gazebo
+    return LaunchDescription([
+        # Start Gazebo server
         ExecuteProcess(
             cmd=['gazebo', '--verbose', '-s', 'libgazebo_ros_factory.so'],
             output='screen'
         ),
-        # Spawn the Robot
+
+        # Spawn the hotel URDF model in Gazebo
         Node(
             package='gazebo_ros',
             executable='spawn_entity.py',
-            arguments=['-entity', 'turtlebot3', '-file', "urdf_file_path"],
+            arguments=['-entity', 'hotel_world', '-file', 'urdf/my_world.sdf'],
             output='screen'
         ),
     ])
