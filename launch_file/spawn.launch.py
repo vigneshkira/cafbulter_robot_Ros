@@ -4,7 +4,7 @@ from launch.actions import ExecuteProcess
 from launch_ros.actions import Node
 
 def generate_launch_description():
-   urdf_file_path = 'urdf/turtlebot3_burger.urdf'
+   urdf_file_path = 'urdf/hotel.world'
 
    if not os.path.exists(urdf_file_path):
         raise FileNotFoundError(f"URDF file not found: {urdf_file_path}")

@@ -14,7 +14,7 @@ def generate_launch_description():
         Node(
             package='gazebo_ros',
             executable='spawn_entity.py',
-            arguments=['-entity', 'hotel_world', '-file', 'urdf/my_world.sdf'],
+            arguments=['-entity', 'hotel_world', '-file', 'urdf/hotel.world'],
             output='screen'
         ),
     ])
